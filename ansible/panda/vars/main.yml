@@ -1,5 +1,4 @@
 ---
 # vars file for panda
 
-maria_root_pw: rlqhs#2
-
+maria_root_pw: <password>
