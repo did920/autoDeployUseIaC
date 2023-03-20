@@ -3,7 +3,7 @@
 #- name: make user
 #  user:
 #    name: muhayu
-#    password: qhfka.11
+#    password: <password>
 #  ignore_errors: yes
 #
 #- name: mount disk
@@ -85,7 +85,7 @@
 #- mongodb_user:
 #    database: admin
 #    name: admin
-#    password: dkcla.11
+#    password: <password>
 #    roles: root
 #    state: present
 
