@@ -94,7 +94,7 @@
     src: /<dir>/{{ ansible_date_time['date'] }}
     dest: /disk01/mongodb/
     mode: push
-  delegate_to: 115.68.157.254
+  delegate_to: <backup server>
 
 - shell: |
     cd /disk01/mongodb/{{ ansible_date_time['date'] }}
