@@ -1,0 +1,26 @@
+---
+# tasks file for key_exchange
+- name: exchange key between aws and backup servers 
+  shell: >  
+    ssh-keygen -q -b 2048 -t rsa -N "" -C "creating {{ ansible_hostname }}" -f ~/.ssh/id_rsa 
+    creates="~/.ssh/id_rsa" 
+             
+- name: Fetch the keyfile from the node to master 
+  tags: run 
+  fetch:  
+    src: "~/.ssh/id_rsa.pub" 
+    dest: "buffer/{{ansible_host}}-id_rsa.pub" 
+    flat: yes 
+                 
+- name: Copy the key add to authorized_keys using Ansible module 
+  tags: runcd 
+  authorized_key: 
+    user: "{{ ansible_ssh_user }}"
+    state: present 
+    key: "{{ lookup('file','buffer/{{ item }}-id_rsa.pub')}}"
+  when: "{{ item != ansible_host }}" 
+  with_items:  
+    - "{{ groups['all'] }}"   
+
+  
+

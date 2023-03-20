@@ -1,0 +1,24 @@
+---
+
+- name: key exchange between servers
+  hosts: all
+  roles:
+  - key_exchange
+
+- name: install panda
+  hosts: main
+  become: true
+  become_user: root
+  vars:
+    ansible_user: centos
+  roles:
+  - center2
+#- name: trans backup files
+#  hosts: backup
+#  become: true
+#  vars:
+#    now: "{{ lookup('-','{{ansible_date.date}}')}}"
+#    file1: panda_db_{{now}}.sql.gz
+#    file2: panda_uploadfiles_{{now}.tar.gz
+#  roles:
+#  - tran_from_backup

@@ -1,0 +1,103 @@
+--- 
+#tasks file for panda
+#- name: make user
+#  user:
+#    name: muhayu
+#    password: qhfka.11
+#  ignore_errors: yes
+#
+#- name: mount disk
+#  parted:
+#    device: "/dev/nvme1n1"
+#    number: "1"
+#    part_type: primary
+#    state: present
+#    part_start: "0%"
+#    part_end: "100%"
+#
+#- filesystem:
+#    fstype: xfs
+#    dev: /dev/nvme1n1p1
+#
+#- mount:
+#    fstype: xfs
+#    src: /dev/nvme1n1p1
+#    path: /disk01
+#    state: mounted
+#
+#- name: transfer files
+#  copy:
+#    src={{ item.0 }} 
+#    dest={{ item.1 }}
+#  with_together:
+#    - [ 'mongodb-org.repo', 'openjdk-16.0.1.tar.gz', 'was.tar.gz' ]
+#    - [ '/etc/yum.repos.d', '/usr/lib/jvm/', '/home/muhayu' ]
+#
+#- name: install center2 was
+#  shell: |
+#    cd /home/muhayu
+#    tar xzvf was.tar.gz 
+#    rm -f was.tar.gz
+#
+#- name: install jdk16.0.1
+#  shell: |
+#    cd /usr/lib/jvm
+#    tar xzvf openjdk-16.0.1.tar.gz
+#    alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-16.0.1/bin/java 1
+#    alternatives --config java << EOF
+#    2
+#    EOF
+#    sed -i "s/JAVA_HOME=\/usr\/lib\/jvm\/java-1.8.0/JAVA_HOME=\$(readlink -f \/usr\/bin\/java) | sed \"s:bin\/java::\"/" /etc/profile
+#- name: install mongodb 4.2
+#  shell: |
+#    mkdir -p /disk01/mongodb/logs
+#    mkdir -p /disk01/mongodb/run
+#    mkdir -p /disk01/mongodb/data
+#
+#- yum:
+#    name: mongodb-org
+#    state: present
+#
+#- copy:
+#    src={{ item.0 }}
+#    dest={{ item.1 }}
+#  with_together:
+#    - [ 'mongod.conf', 'mongod.service' ]
+#    - [ '/etc', '/usr/lib/systemd/system' ]
+#
+#- shell: |
+#    chown -R mongod. /disk01/mongodb
+#    systemctl daemon-reload
+#    setenforce 0
+#
+#- name: start mongodb
+#  service:
+#    name: mongod
+#    state: started
+#    enabled: yes
+#- yum:
+#    name: python-pip, python-setuptools
+#    state: present
+#
+#- pip:
+#    name: pymongo
+#
+#- mongodb_user:
+#    database: admin
+#    name: admin
+#    password: dkcla.11
+#    roles: root
+#    state: present
+
+- name: transfer backup file from backup to panda server
+  synchronize:
+    src: /disk01/backup/groupware/center2.muhayu.com/{{ ansible_date_time['date'] }}
+    dest: /disk01/mongodb/
+    mode: push
+  delegate_to: 115.68.157.254
+
+- shell: |
+    cd /disk01/mongodb/{{ ansible_date_time['date'] }}
+    mongorestore -uadmin -pdkcla.11 --authenticationDatabase admin --db local ./local --drop
+
+
