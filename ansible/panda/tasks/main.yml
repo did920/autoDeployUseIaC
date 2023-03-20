@@ -2,8 +2,8 @@
 #tasks file for panda
 - name: make user
   user:
-    name: panda 
-    password: qhfka.11
+    name: <id> 
+    password: <password>
   ignore_errors: yes
 
 - name: mount disk
@@ -91,13 +91,13 @@
     src: /disk01/backup/groupware/panda.muhayu.com/panda_db_{{now}}.sql.gz
     dest: /backup/panda_db_{{now}}.sql.gz
     mode: push
-  delegate_to: 115.68.157.254
+  delegate_to: <backup server>
 
 - synchronize:
     src: /disk01/backup/groupware/panda.muhayu.com/panda_uploadfiles_{{now}}.tar.gz
     dest: /backup/panda_uploadfiles_{{now}}.tar.gz
     mode: push
-  delegate_to: 115.68.157.254
+  delegate_to: <backup server>
   
 - shell: |
     cd /backup
@@ -109,12 +109,12 @@
   mysql_db: 
     name: panda 
     state: present
-    login_user: root
+    login_user: <id>
     login_password: "{{ maria_root_pw }}"
 - name: create panda user
   mysql_user:
-    name: panda
-    password: wltlr$$
+    name: <id>
+    password: <password>
     priv: 'panda.*:ALL'
 
 - name: insert sql to panda database  
