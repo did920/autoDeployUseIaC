@@ -1,0 +1,125 @@
+--- 
+#tasks file for panda
+- name: make user
+  user:
+    name: panda 
+    password: qhfka.11
+  ignore_errors: yes
+
+- name: mount disk
+  parted:
+    device: "/dev/nvme1n1"
+    number: "1"
+    part_type: primary
+    state: present
+    part_start: "0%"
+    part_end: "100%"
+
+- parted:
+    device: "/dev/nvme2n1"
+    number: "1"
+    part_type: primary
+    state: present
+    part_start: "0%"
+    part_end: "100%"
+- filesystem:
+    fstype: xfs
+    dev: /dev/nvme2n1p1
+
+- filesystem:
+    fstype: xfs
+    dev: /dev/nvme1n1p1
+
+- mount:
+    fstype: xfs
+    src: /dev/nvme1n1p1
+    path: /backup
+    state: mounted
+
+- mount:
+    fstype: xfs
+    src: /dev/nvme2n1p1
+    path: /home/panda
+    state: mounted
+
+- name: install tomcat
+  copy:
+    src: panda.tar.gz
+    dest: /home/panda/
+
+- shell: |
+    cd /home/panda
+    tar xzvf panda.tar.gz --strip-components=1
+    rm -f panda.tar.gz
+
+- name: install java, jdk8
+  yum:
+    name: java-1.8.0-openjdk-accessibility
+    state: present
+
+
+- name: install mariadb 5.5.68
+  copy: 
+    src: maria5.5.56.repo
+    dest: /etc/yum.repos.d/
+
+- yum:
+    name: mariadb, mariadb-server, MySQL-python
+    state: present
+
+- shell: |
+    mkdir -p /var/lib/mysql/data/innodb
+    mkdir -p /var/lib/mysql/data/innodb_log
+    chown -R mysql. /var/lib/mysql/data
+
+
+- name: config my.cnf
+  copy:
+    src: my.cnf
+    dest: /etc/
+
+- name: start mariadb
+  service:
+    name: mysql
+    state: started
+
+- name: transfer backup file from backup to panda server
+  set_fact: 
+    now="{{ lookup('pipe','date \"+%Y%m%d\"')}}"
+  
+- synchronize:
+    src: /disk01/backup/groupware/panda.muhayu.com/panda_db_{{now}}.sql.gz
+    dest: /backup/panda_db_{{now}}.sql.gz
+    mode: push
+  delegate_to: 115.68.157.254
+
+- synchronize:
+    src: /disk01/backup/groupware/panda.muhayu.com/panda_uploadfiles_{{now}}.tar.gz
+    dest: /backup/panda_uploadfiles_{{now}}.tar.gz
+    mode: push
+  delegate_to: 115.68.157.254
+  
+- shell: |
+    cd /backup
+    tar xzvf panda_uploadfiles_{{now}}.tar.gz --strip-components=2
+    mkdir -p /home/panda/uploadfiles
+    mv uploadfiles /home/panda/uploadfiles
+
+- name: create panda database
+  mysql_db: 
+    name: panda 
+    state: present
+    login_user: root
+    login_password: "{{ maria_root_pw }}"
+- name: create panda user
+  mysql_user:
+    name: panda
+    password: wltlr$$
+    priv: 'panda.*:ALL'
+
+- name: insert sql to panda database  
+  shell: |
+    cd /backup
+    gzip -d panda_db_{{now}}.sql.gz
+    mysql -uroot -p{{ maria_root_pw }} panda < /backup/panda_db_{{now}}.sql
+
