@@ -2,7 +2,7 @@
 #tasks file for panda
 #- name: make user
 #  user:
-#    name: muhayu
+#    name: <id>
 #    password: <password>
 #  ignore_errors: yes
 #
@@ -83,21 +83,21 @@
 #    name: pymongo
 #
 #- mongodb_user:
-#    database: admin
-#    name: admin
+#    database: <dbname>
+#    name: <id
 #    password: <password>
 #    roles: root
 #    state: present
 
 - name: transfer backup file from backup to panda server
   synchronize:
-    src: /disk01/backup/groupware/center2.muhayu.com/{{ ansible_date_time['date'] }}
+    src: /<dir>/{{ ansible_date_time['date'] }}
     dest: /disk01/mongodb/
     mode: push
   delegate_to: 115.68.157.254
 
 - shell: |
     cd /disk01/mongodb/{{ ansible_date_time['date'] }}
-    mongorestore -uadmin -pdkcla.11 --authenticationDatabase admin --db local ./local --drop
+    mongorestore -u<id> -p<password> --authenticationDatabase <dbname> --db local ./local --drop
 
 
